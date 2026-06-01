@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="description" content="個人用ローカルギャラリー" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="My Gallery" />
+  <title>My Gallery</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="is-locked">
+  <div id="loginScreen" class="login-screen" role="dialog" aria-modal="true" aria-labelledby="loginHeading">
+    <div class="login-panel">
+      <h1 id="loginHeading">My Gallery</h1>
+      <p id="loginSubtitle" class="login-subtitle"></p>
+      <form id="loginForm" class="login-form">
+        <label class="field">
+          <span id="loginPasswordLabel">パスワード</span>
+          <input
+            type="password"
+            id="loginPassword"
+            required
+            minlength="4"
+            autocomplete="current-password"
+          />
+        </label>
+        <label class="field" id="loginConfirmField" hidden>
+          <span>パスワード（確認）</span>
+          <input
+            type="password"
+            id="loginPasswordConfirm"
+            minlength="4"
+            autocomplete="new-password"
+          />
+        </label>
+        <div id="loginSetupSecondary" class="login-setup-secondary" hidden>
+          <details class="login-setup-advanced">
+            <summary>追加のパスワード（任意）</summary>
+            <label class="field">
+              <span>追加のパスワード</span>
+              <input
+                type="password"
+                id="loginDecoyPassword"
+                minlength="4"
+                autocomplete="new-password"
+              />
+            </label>
+            <label class="field">
+              <span>追加のパスワード（確認）</span>
+              <input
+                type="password"
+                id="loginDecoyPasswordConfirm"
+                minlength="4"
+                autocomplete="new-password"
+              />
+            </label>
+          </details>
+        </div>
+        <p id="loginError" class="login-error" hidden role="alert"></p>
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary login-submit">ログイン</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="appShell" hidden>
+  <header>
+    <h1>My Gallery</h1>
+    <div class="header-actions">
+      <label class="upload-btn">
+        画像を追加
+        <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      </label>
+      <button type="button" id="addTextBtn" class="btn btn-text">テキストを追加</button>
+      <button type="button" id="enterMoveModeBtn" class="btn btn-outline">フォルダへ移動</button>
+      <button type="button" id="enterDeleteModeBtn" class="btn btn-outline">削除</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="deleteModeBar" class="selection-mode-bar delete-mode-bar" hidden>
+      <span id="selectionCount" class="selection-count">0 件選択中</span>
+      <div class="selection-mode-bar-actions">
+        <button type="button" id="deleteSelectedBtn" class="btn btn-danger" disabled>
+          選択した項目を削除
+        </button>
+        <button type="button" id="cancelDeleteModeBtn" class="btn btn-outline">キャンセル</button>
+      </div>
+    </div>
+    <div id="moveModeBar" class="selection-mode-bar move-mode-bar" hidden>
+      <span id="moveSelectionCount" class="selection-count">0 件選択中</span>
+      <label class="move-target-field">
+        <span class="move-target-label">移動先</span>
+        <select id="moveTargetSelect" class="move-target-select" aria-label="移動先フォルダ"></select>
+      </label>
+      <div class="selection-mode-bar-actions">
+        <button type="button" id="moveSelectedBtn" class="btn btn-primary" disabled>
+          選択した項目を移動
+        </button>
+        <button type="button" id="cancelMoveModeBtn" class="btn btn-outline">キャンセル</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-bar">
+        <label class="search-label" for="searchInput">検索</label>
+        <div class="search-input-wrap">
+          <input
+            type="search"
+            id="searchInput"
+            class="search-input"
+            placeholder="タイトル・タグで検索"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+          <button type="button" id="searchClearBtn" class="search-clear" hidden aria-label="検索をクリア">×</button>
+        </div>
+      </div>
+      <div class="filter-controls">
+        <label class="filter-toggle">
+          <input type="checkbox" id="favoritesOnlyFilter" />
+          <span>お気に入りのみ</span>
+        </label>
+        <label class="filter-sort">
+          <span class="filter-sort-label">並び替え</span>
+          <select id="sortSelect" class="sort-select" aria-label="並び替え">
+            <option value="newest">新しい順</option>
+            <option value="oldest">古い順</option>
+            <option value="updated">更新日時順</option>
+            <option value="titleAsc">タイトル昇順（A→Z、あ→ん）</option>
+            <option value="titleDesc">タイトル降順（Z→A、ん→あ）</option>
+            <option value="favorite">お気に入り優先</option>
+          </select>
+        </label>
+        <div class="data-controls">
+          <span class="data-controls-label">データ</span>
+          <button type="button" id="exportBackupBtn" class="btn btn-outline btn-sm">バックアップ</button>
+          <label class="import-backup-btn btn btn-outline btn-sm" id="importBackupLabel">
+            復元
+            <input type="file" id="importBackupInput" accept="application/json,.json" hidden />
+          </label>
+          <button type="button" id="decoySettingsBtn" class="btn btn-outline btn-sm">デコイ設定</button>
+        </div>
+      </div>
+    </div>
+    <section class="folder-section" aria-label="フォルダ">
+      <div class="folder-section-header">
+        <h2 class="folder-section-title">フォルダ</h2>
+        <button type="button" id="createFolderBtn" class="btn btn-outline btn-sm">＋ フォルダ作成</button>
+      </div>
+      <ul id="folderList" class="folder-list"></ul>
+    </section>
+    <p id="status" class="status" aria-live="polite"></p>
+    <ul id="gallery" class="gallery"></ul>
+  </main>
+
+  <div id="folderModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="folderModalHeading">
+    <div class="modal-panel">
+      <h2 id="folderModalHeading">フォルダを作成</h2>
+      <form id="folderForm">
+        <label class="field">
+          <span>フォルダ名</span>
+          <input type="text" id="folderNameInput" required maxlength="100" autocomplete="off" />
+        </label>
+        <label class="filter-toggle folder-decoy-toggle" id="folderDecoyField">
+          <input type="checkbox" id="folderDecoyCheckbox" />
+          <span>デコイ用フォルダ（デコイパスワードログイン時のみ表示）</span>
+        </label>
+        <div class="modal-actions">
+          <button type="button" id="folderModalCancel" class="btn btn-outline">キャンセル</button>
+          <button type="submit" class="btn btn-primary">作成</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="decoySettingsModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="decoySettingsHeading">
+    <div class="modal-panel">
+      <h2 id="decoySettingsHeading">デコイパスワード設定</h2>
+      <p class="modal-description">
+        デコイパスワードでログインすると、デコイ用フォルダの内容だけが表示されます。本パスワードとは異なるものを設定してください。
+      </p>
+      <form id="decoySettingsForm">
+        <label class="field">
+          <span>デコイパスワード</span>
+          <input type="password" id="decoySettingsPassword" minlength="4" autocomplete="new-password" />
+        </label>
+        <label class="field">
+          <span>デコイパスワード（確認）</span>
+          <input type="password" id="decoySettingsPasswordConfirm" minlength="4" autocomplete="new-password" />
+        </label>
+        <label class="filter-toggle">
+          <input type="checkbox" id="decoySettingsRemove" />
+          <span>デコイパスワードを削除する</span>
+        </label>
+        <p id="decoySettingsError" class="login-error" hidden role="alert"></p>
+        <div class="modal-actions">
+          <button type="button" id="decoySettingsCancel" class="btn btn-outline">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="textModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="textModalHeading">
+    <div class="modal-panel">
+      <h2 id="textModalHeading">テキストを追加</h2>
+      <form id="textForm">
+        <label class="field">
+          <span>タイトル</span>
+          <input type="text" id="textTitle" required maxlength="200" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>本文</span>
+          <textarea id="textBody" required rows="8"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" id="textModalCancel" class="btn btn-outline">キャンセル</button>
+          <button type="submit" class="btn btn-text">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="textViewModal" class="modal text-view-modal" hidden role="dialog" aria-modal="true" aria-labelledby="textViewDetail">
+    <div class="modal-panel modal-panel-wide">
+      <button type="button" id="textViewClose" class="modal-close" aria-label="閉じる">×</button>
+      <div id="textViewDetail" class="detail-panel"></div>
+      <div class="modal-actions text-view-actions">
+        <button type="button" id="textViewCloseBtn" class="btn btn-outline">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lightboxDetail">
+    <button type="button" id="lightboxClose" class="lightbox-close" aria-label="閉じる">×</button>
+    <div class="lightbox-content">
+      <img id="lightboxImg" src="" alt="" />
+      <div id="lightboxDetail" class="detail-panel detail-panel--dark"></div>
+    </div>
+  </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
